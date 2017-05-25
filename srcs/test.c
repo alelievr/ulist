@@ -6,7 +6,7 @@
 /*   By: alelievr <alelievr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/05/24 23:51:29 by alelievr          #+#    #+#             */
-/*   Updated: 2017/05/25 05:08:53 by alelievr         ###   ########.fr       */
+/*   Updated: 2017/05/25 18:38:07 by alelievr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 int		main(void)
 {
-	NEW_MANAGED_LIST(lst); //this list will be free at the end of the current scope
+/*	NEW_MANAGED_LIST(lst); //this list will be free at the end of the current scope
 
 	LIST_PUSH_BACK(lst, 10);
 	LIST_PUSH_FRONT(lst, 42);
@@ -26,9 +26,9 @@ int		main(void)
 	//LIST_SHSORT(lst, int, e1 > e2);
 
 	LIST_FOREACH(lst, int, elem, index)
-		printf("element at index %zu = %i \n", index, elem);
+		printf("element at index %zu = %i \n", index, elem);*/
 
-	/*NEW_LIST(lst2);
+	NEW_LIST(lst2);
 
 	LIST_PUSH_BACK(lst2, "olol1");
 	LIST_PUSH_BACK(lst2, "olol2");
@@ -36,6 +36,6 @@ int		main(void)
 	LIST_PUSH_BACK(lst2, "olol4");
 	LIST_PUSH_BACK(lst2, "olol5");
 
-	LIST_FOREACH(lst2, const char *, elem, index)
-		printf("element at index %zu = %s \n", index, elem);*/
+	LIST_FOREACH(lst2, const char *, elem)
+		printf("strings: %s\n", elem);
 }

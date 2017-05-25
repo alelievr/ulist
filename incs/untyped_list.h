@@ -6,7 +6,7 @@
 /*   By: alelievr <alelievr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/12 23:52:18 by alelievr          #+#    #+#             */
-/*   Updated: 2017/05/25 05:08:42 by alelievr         ###   ########.fr       */
+/*   Updated: 2017/05/25 18:38:22 by alelievr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,17 +50,17 @@ void			ulist_cleanup(LIST *lst)
 }
 
 # define NONE
-# define MULTI_4_(_1, _2, _3, _4, _5, NAME, ...) NAME
+# define MULTI_4_(_1, _2, _3, _4, NAME, ...) NAME
 # define LIST_END_CHECK(lst, ...) ((lst->current == NULL) ? true : (__VA_ARGS__, true))
 
 //TODO: use the type olo = ({type b = 0; b == 0; b}); feature
 
 # define ELEM_GET_(type, l) *((type *)((t_list_links *)l + 1))
 
-# define NEW_LIST(name)			LIST name = (LIST)malloc(sizeof(t_ulist)); LIST_INIT(name);
-# define NEW_MANAGED_LIST(name)	LIST name __attribute((cleanup(ulist_cleanup))) = (LIST)malloc(sizeof(t_ulist));; LIST_INIT(name);
+# define NEW_LIST(name)			LIST name = (LIST)malloc(sizeof(t_ulist)); LIST_INIT(name)
+# define NEW_MANAGED_LIST(name)	LIST name __attribute((cleanup(ulist_cleanup))) = (LIST)malloc(sizeof(t_ulist)); LIST_INIT(name)
 
-# define LIST_INIT(name) name->begin = NULL; name->current = NULL; name->end = NULL; name->count = 0;
+# define LIST_INIT(name) name->begin = NULL; name->current = NULL; name->end = NULL; name->count = 0
 
 # define NEW_ELEM(lst, e)	({ \
 		t_list_links * el = malloc(sizeof(t_list_links) + sizeof(e)); \
@@ -69,7 +69,7 @@ void			ulist_cleanup(LIST *lst)
 		memcpy(el + 1, (typeof(e) *)(typeof(e)[1]){e}, sizeof(e)); el; \
 	})
 
-# define LIST_PUSH_BACK(lst, e) do { \
+# define LIST_PUSH_BACK(lst, e) { \
 	t_list_links * elem = NEW_ELEM(lst, e); \
 	if (lst->count == 0) { \
 		lst->begin = elem; \
@@ -80,7 +80,7 @@ void			ulist_cleanup(LIST *lst)
 	lst->end->next = elem; \
 	elem->next = NULL; \
 	lst->count++; \
-} while (false)
+}
 
 # define LIST_PUSH_FRONT(lst, e) { \
 	t_list_links *elem = NEW_ELEM(lst, e); \
@@ -101,9 +101,9 @@ void			ulist_cleanup(LIST *lst)
 	type elem = ELEM_GET_(type, lst->begin); \
 	for (lst->current = lst->begin; \
 			lst->current, elem = ELEM_GET_(type, lst->current); \
-			index++, lst->current->next)
+			lst->current = lst->current->next)
 
-# define LIST_FOREACH(lst, type, elem, ...) MULTI_4_(lst, type, elem, __VA_ARGS__, LIST_FOREACH_, LIST_FOREACH_INDEX_, NONE)(lst, type, elem, __VA_ARGS__)
+# define LIST_FOREACH(...) MULTI_4_(__VA_ARGS__, LIST_FOREACH_INDEX_, LIST_FOREACH_, NONE, NONE)(__VA_ARGS__)
 
 # define LIST_SWAP(lst, pos1, pos2)
 
