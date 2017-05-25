@@ -6,7 +6,7 @@
 /*   By: alelievr <alelievr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/12 23:52:18 by alelievr          #+#    #+#             */
-/*   Updated: 2017/05/25 04:45:30 by alelievr         ###   ########.fr       */
+/*   Updated: 2017/05/25 05:08:42 by alelievr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,8 @@ typedef struct	s_ulist
 static size_t *		gap_sequence = (size_t *)(size_t []){701, 301, 132, 57, 23, 10, 4, 1};
 static const int	gap_sequence_count = 8;
 
-static void			ulist_cleanup(LIST *lst)
+void			ulist_cleanup(LIST *lst);
+void			ulist_cleanup(LIST *lst)
 {
 	(void)lst;
 	printf("free the list here\n");
@@ -50,7 +51,7 @@ static void			ulist_cleanup(LIST *lst)
 
 # define NONE
 # define MULTI_4_(_1, _2, _3, _4, _5, NAME, ...) NAME
-# define LIST_END_CHECK(lst, ...) ((lst->current == NULL) ? true : (__VA_ARGS__))
+# define LIST_END_CHECK(lst, ...) ((lst->current == NULL) ? true : (__VA_ARGS__, true))
 
 //TODO: use the type olo = ({type b = 0; b == 0; b}); feature
 
@@ -68,17 +69,18 @@ static void			ulist_cleanup(LIST *lst)
 		memcpy(el + 1, (typeof(e) *)(typeof(e)[1]){e}, sizeof(e)); el; \
 	})
 
-# define LIST_PUSH_BACK(lst, e) { \
+# define LIST_PUSH_BACK(lst, e) do { \
 	t_list_links * elem = NEW_ELEM(lst, e); \
 	if (lst->count == 0) { \
-		lst->end = elem; \
 		lst->begin = elem; \
+		lst->end = elem; \
+	} else { \
+		elem->prev = lst->end; \
 	} \
-	elem->prev = lst->end; \
-	lst->end = elem; \
+	lst->end->next = elem; \
 	elem->next = NULL; \
 	lst->count++; \
-}
+} while (false)
 
 # define LIST_PUSH_FRONT(lst, e) { \
 	t_list_links *elem = NEW_ELEM(lst, e); \
