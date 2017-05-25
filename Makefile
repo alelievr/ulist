@@ -6,7 +6,7 @@
 #    By: alelievr <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2014/07/15 15:13:38 by alelievr          #+#    #+#              #
-#    Updated: 2017/05/25 00:13:12 by alelievr         ###   ########.fr        #
+#    Updated: 2017/05/25 19:33:58 by alelievr         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -42,7 +42,7 @@ LDLIBS		=
 NAME		=	a.out
 
 #	Compiler
-WERROR		=	-Werror
+WERROR		=	#-Werror
 CFLAGS		=	-Weverything -pedantic -ferror-limit=999
 CPROTECTION	=	-z execstack -fno-stack-protector
 

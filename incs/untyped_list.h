@@ -6,12 +6,14 @@
 /*   By: alelievr <alelievr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/12 23:52:18 by alelievr          #+#    #+#             */
-/*   Updated: 2017/05/25 18:38:22 by alelievr         ###   ########.fr       */
+/*   Updated: 2017/05/25 21:32:36 by alelievr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef NYANCAT_H
 # define NYANCAT_H
+
+# define DEBUG
 
 # pragma clang diagnostic ignored "-Wgnu-statement-expression"
 # pragma clang diagnostic ignored "-Wlanguage-extension-token"
@@ -23,10 +25,17 @@
 **	Untyped linked lists:
 */
 
+typedef struct	s_node_data
+{
+	bool		addressing;
+	long		:56;
+}				t_node_data;
+
 typedef struct	s_list_links
 {
 	struct s_list_links	*next;
 	struct s_list_links	*prev;
+	t_node_data			data;
 }				t_list_links;
 
 typedef struct	s_ulist
@@ -46,7 +55,7 @@ void			ulist_cleanup(LIST *lst);
 void			ulist_cleanup(LIST *lst)
 {
 	(void)lst;
-	printf("free the list here\n");
+	//TODO: free list
 }
 
 # define NONE
@@ -55,22 +64,37 @@ void			ulist_cleanup(LIST *lst)
 
 //TODO: use the type olo = ({type b = 0; b == 0; b}); feature
 
-# define ELEM_GET_(type, l) *((type *)((t_list_links *)l + 1))
+# define ADDRESS_OF(...) *((typeof(__VA_ARGS__)[1]){__VA_ARGS__})
+
+# define GET_HARD_ADDR_(...) (void *)(unsigned long)(__VA_ARGS__)//*(void **)(unsigned long)&(__VA_ARGS__)
+
+/*({ int64_t out = 0; asm volatile( \
+			"movq %1, rax;\n" \
+			"movq rax, %0;\n" \
+ 		   	: "=r"(out) : "r"(__VA_ARGS__) : "rax"); (void *)out; })*/
+
+# define ELEM_GET_(type, l) ((l->data.addressing) ? (type)(l + 1) : *((type *)(l + 1)))
 
 # define NEW_LIST(name)			LIST name = (LIST)malloc(sizeof(t_ulist)); LIST_INIT(name)
 # define NEW_MANAGED_LIST(name)	LIST name __attribute((cleanup(ulist_cleanup))) = (LIST)malloc(sizeof(t_ulist)); LIST_INIT(name)
 
 # define LIST_INIT(name) name->begin = NULL; name->current = NULL; name->end = NULL; name->count = 0
 
-# define NEW_ELEM(lst, e)	({ \
-		t_list_links * el = malloc(sizeof(t_list_links) + sizeof(e)); \
+# define EXPAND(...) __VA_ARGS__ 
+
+# define STRINGIFY(x) #x
+
+# define NEW_ELEM(lst, ...)	({ \
+		t_list_links * el = malloc(sizeof(t_list_links) + sizeof(__VA_ARGS__)); \
 		el->next = NULL; \
 		el->prev = NULL; \
-		memcpy(el + 1, (typeof(e) *)(typeof(e)[1]){e}, sizeof(e)); el; \
+		el->data.addressing = ((void *)&(__VA_ARGS__) == GET_HARD_ADDR_(__VA_ARGS__)); \
+		memcpy(el + 1, &(__VA_ARGS__), sizeof(__VA_ARGS__)); \
+		el; \
 	})
 
-# define LIST_PUSH_BACK(lst, e) { \
-	t_list_links * elem = NEW_ELEM(lst, e); \
+# define LIST_PUSH_BACK(lst, ...) { \
+	t_list_links * elem = NEW_ELEM(lst, __VA_ARGS__); \
 	if (lst->count == 0) { \
 		lst->begin = elem; \
 		lst->end = elem; \
@@ -79,22 +103,29 @@ void			ulist_cleanup(LIST *lst)
 	} \
 	lst->end->next = elem; \
 	elem->next = NULL; \
+	lst->end = elem; \
 	lst->count++; \
 }
 
-# define LIST_PUSH_FRONT(lst, e) { \
-	t_list_links *elem = NEW_ELEM(lst, e); \
+# define LIST_PUSH_FRONT(lst, ...) { \
+	t_list_links *elem = NEW_ELEM(lst, __VA_ARGS__); \
+	if (lst->count == 0) {\
+		lst->begin = elem; \
+		lst->end = elem; \
+	} \
+	else { \
+		elem->next = lst->begin; \
+	} \
 	elem->prev = NULL; \
-	elem->next = lst->begin; \
 	lst->begin = elem; \
 	lst->count++; \
 }
 
 # define LIST_FOREACH_INDEX_(lst, type, elem, index) \
 	lst->current = lst->begin; \
-	type elem = ELEM_GET_(type, lst->begin); \
+	type elem; \
 	for (size_t index = 0; \
-			lst->current && LIST_END_CHECK(lst, elem = ELEM_GET_(type, lst->current)); \
+			lst->current && ((elem = ELEM_GET_(type, lst->current)), true); \
 			index++, lst->current = lst->current->next)
 
 # define LIST_FOREACH_(lst, type, elem) \
@@ -107,10 +138,12 @@ void			ulist_cleanup(LIST *lst)
 
 # define LIST_SWAP(lst, pos1, pos2)
 
+//FIXME
 # define LIST_SHSORT(lst, type, ...) { \
-	type		e1; \
-	type		e2; \
-	t_list_links *tmp; \
+	type			e1; \
+	type			e2; \
+	t_list_links	*tmp; \
+ \
 	for (size_t gap = 0; gap < gap_sequence_count; gap++) \
 	{ \
 		for (size_t i = gap; i < lst->count; i++) \
@@ -144,7 +177,6 @@ void			ulist_cleanup(LIST *lst)
 		for (size_t __i = 0; __i < index && lst->current; __i++) \
 			lst->current = lst->current->next; \
 	} \
-	printf("el = %p for index: %zu\n\n", (void *)el, index); \
 	el; \
 })
 
@@ -152,29 +184,29 @@ void			ulist_cleanup(LIST *lst)
 	ELEM_GET_(type, LIST_AT_(lst, type, index));\
 })
 
-# define LIST_FIND(lst, pred)
+# define LIST_FIND(lst, pred) //TODO
 
-# define LIST_INSERT(lst, e, index)
+# define LIST_INSERT(lst, e, index) //TODO
 
-# define LIST_INSERT_SORT(lst, e, cmp)
+# define LIST_INSERT_SORT(lst, e, cmp) //TODO
 
-# define LIST_ANY(lst, pred)
+# define LIST_ANY(lst, pred) //TODO
 
-# define LIST_ALL(lst, pred)
+# define LIST_ALL(lst, pred) //TODO
 
-# define LIST_REMOVEALL(lst, pred)
+# define LIST_REMOVEALL(lst, pred) //TODO
 
-# define LIST_REMOVE(lst, index)
+# define LIST_REMOVE(lst, index) //TODO
 
-# define LIST_CLEAR(lst)
+# define LIST_CLEAR(lst) //TODO
 
-# define LIST_TOARRAY(lst, type)
+# define LIST_TOARRAY(lst, type) //TODO
 
-# define LIST_FINDALL(lst, pref)
+# define LIST_FINDALL(lst, pref) //TODO
 
-# define LIST_REVERSE(lst)
+# define LIST_REVERSE(lst) //TODO
 
-# define LIST_CONCAT(lst1, lst2)
+# define LIST_CONCAT(lst1, lst2) //TODO
 
 # define LIST_FIRST(lst)	ELEM_GET_(lst->begin)
 
